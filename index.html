@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DSM Working Layout Point Marker</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">DSM PROGRESS TOOL</p>
+      <h1>Working Layout Point Marker</h1>
+      <p class="subtitle">Upload a working-layout PDF, select an ST, and mark completed point references from GH, TH, TKG and ET Google Sheets.</p>
+    </div>
+    <div class="top-actions">
+      <button id="printBtn" class="button secondary" disabled>Print / Save PDF</button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <section class="panel">
+        <div class="step-title"><span>1</span> Working layout</div>
+        <label class="upload-box" for="pdfInput">
+          <input id="pdfInput" type="file" accept="application/pdf" />
+          <strong>Upload PDF layout</strong>
+          <small>Vector PDFs with selectable point labels give the best automatic matching.</small>
+        </label>
+        <div id="pdfMeta" class="muted compact">No PDF loaded.</div>
+
+        <div class="field-row">
+          <label>
+            Zoom
+            <input id="zoomRange" type="range" min="0.7" max="2.5" step="0.1" value="1.25" disabled />
+          </label>
+          <output id="zoomValue">125%</output>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="step-title"><span>2</span> Completed-point source</div>
+        <p class="hint">Paste the Google Sheet URL for each subcontractor. Blank sources are skipped.</p>
+
+        <div class="sheet-grid">
+          <label>GH Google Sheet
+            <input id="ghUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+          </label>
+          <label>TH Google Sheet
+            <input id="thUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+          </label>
+          <label>TKG Google Sheet
+            <input id="tkgUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+          </label>
+          <label>ET Google Sheet
+            <input id="etUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+          </label>
+        </div>
+
+        <label>Source tab
+          <input id="sheetName" type="text" value="Daily Point Update" />
+        </label>
+
+        <details class="fallback">
+          <summary>Private Sheet / CSV fallback</summary>
+          <p>For a private Sheet, export the <strong>Daily Point Update</strong> tab as CSV and upload one or more CSV files here.</p>
+          <input id="csvInput" type="file" accept=".csv,text/csv" multiple />
+        </details>
+      </section>
+
+      <section class="panel">
+        <div class="step-title"><span>3</span> Select ST and mark</div>
+        <div class="field-pair">
+          <label>ST number
+            <input id="stInput" list="stOptions" placeholder="ST406" autocomplete="off" />
+            <datalist id="stOptions">
+              <option value="ST101"></option><option value="ST102"></option><option value="ST103"></option>
+              <option value="ST202"></option><option value="ST301"></option><option value="ST402"></option>
+              <option value="ST403"></option><option value="ST404"></option><option value="ST406"></option>
+              <option value="ST407"></option><option value="ST502"></option>
+            </datalist>
+          </label>
+          <button id="loadBtn" class="button primary">Load & Mark</button>
+        </div>
+
+        <div id="status" class="status neutral">Waiting for PDF and data source.</div>
+
+        <div class="metrics">
+          <div><strong id="completedCount">0</strong><span>Completed</span></div>
+          <div><strong id="readyCount">0</strong><span>Ready to core</span></div>
+          <div><strong id="totalMgCount">0.00</strong><span>Completed MG (m³)</span></div>
+          <div><strong id="matchedCount">0</strong><span>Auto matched</span></div>
+          <div><strong id="manualCount">0</strong><span>Manual mapped</span></div>
+          <div><strong id="unmatchedCount">0</strong><span>Unmatched</span></div>
+        </div>
+
+        <div class="button-row">
+          <button id="clearBtn" class="button ghost" disabled>Clear marks</button>
+          <button id="clearMappingBtn" class="button ghost danger" disabled>Clear manual mappings</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Unmatched points</h2>
+            <p>Use manual placement only when the point label cannot be extracted from the PDF.</p>
+          </div>
+          <span id="unmatchedBadge" class="badge">0</span>
+        </div>
+        <div id="manualInstruction" class="manual-instruction hidden"></div>
+        <div id="unmatchedList" class="point-list empty-state">No completed points loaded.</div>
+      </section>
+
+      <section class="panel small">
+        <h2>Legend</h2>
+        <div class="legend">
+          <span><i class="dot auto"></i> Completed point — less than 28 days</span>
+          <span><i class="dot ready"></i> Ready to core — completed at least 28 days</span>
+          <span><i class="dot manual"></i> Manually mapped point</span>
+          <span><i class="date-legend">29-Jun-26</i> Completion date shown below marker</span>
+        </div>
+      </section>
+    </aside>
+
+    <main class="workspace">
+      <div id="emptyViewer" class="empty-viewer">
+        <div class="empty-icon">PDF</div>
+        <h2>Upload a working-layout PDF</h2>
+        <p>The PDF stays in your browser. The page matches point references and places the tick and completion date directly below the corresponding point number.</p>
+      </div>
+      <div id="pdfViewer" class="pdf-viewer"></div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
