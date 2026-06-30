@@ -25,6 +25,7 @@
     status: document.querySelector("#status"),
     completedCount: document.querySelector("#completedCount"),
     readyCount: document.querySelector("#readyCount"),
+    totalMgCount: document.querySelector("#totalMgCount"),
     matchedCount: document.querySelector("#matchedCount"),
     manualCount: document.querySelector("#manualCount"),
     unmatchedCount: document.querySelector("#unmatchedCount"),
@@ -44,6 +45,7 @@
     pages: [],
     textIndex: new Map(),
     completed: new Map(),
+    totalMg: 0,
     placements: new Map(),
     unmatched: [],
     pendingManual: null,
@@ -280,6 +282,8 @@
         throw new Error("Paste at least one Google Sheet URL or upload a CSV file.");
       }
 
+      state.totalMg = allRecords.reduce((sum, record) => sum + parseNumber(record.mgNet), 0);
+
       state.completed = new Map();
       for (const record of allRecords) {
         const norm = normalizePoint(record.pointRef);
@@ -300,7 +304,7 @@
       if (!count) {
         setStatus("warning", `No completed point references found for ${st}. Check the ST value, sharing permission and source tab.`);
       } else {
-        setStatus("success", `${count} completed point(s) loaded for ${st}.`);
+        setStatus("success", `${count} completed point(s) loaded for ${st}. Total MG: ${formatVolume(state.totalMg)} m³.`);
       }
       els.clearBtn.disabled = count === 0;
     } catch (error) {
@@ -333,6 +337,9 @@
           type: normalizedHeaders.findIndex((h) => h === "TYPE" || h === "DSMTYPE"),
           designZone: normalizedHeaders.findIndex((h) => h === "DESIGNZONE"),
           subcon: normalizedHeaders.findIndex((h) => h === "SUBCON"),
+          mgNet: normalizedHeaders.findIndex((h) =>
+            h === "MGM3DAYNET" || h === "MGNET" || h === "MGNETM3" || h === "MGM3NET"
+          ),
         };
         break;
       }
@@ -358,6 +365,7 @@
         st: normalizeSt(row[indexes.st]),
         rig: indexes.rig >= 0 ? cleanCell(row[indexes.rig]) : "",
         type: indexes.type >= 0 ? cleanCell(row[indexes.type]) : "",
+        mgNet: indexes.mgNet >= 0 ? cleanCell(row[indexes.mgNet]) : "",
         source: indexes.subcon >= 0 ? cleanCell(row[indexes.subcon]) || source : source,
       }));
   }
@@ -537,6 +545,7 @@
 
   function clearMarks() {
     state.completed = new Map();
+    state.totalMg = 0;
     state.unmatched = [];
     state.pendingManual = null;
     els.manualInstruction.classList.add("hidden");
@@ -562,6 +571,7 @@
   ) {
     els.completedCount.textContent = String(state.completed.size);
     els.readyCount.textContent = String(readyToCore);
+    els.totalMgCount.textContent = formatVolume(state.totalMg);
     els.matchedCount.textContent = String(autoMatched);
     els.manualCount.textContent = String(manualMatched);
     els.unmatchedCount.textContent = String(unmatched);
@@ -644,6 +654,19 @@
     const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][date.getMonth()];
     const year = String(date.getFullYear()).slice(-2);
     return `${day}-${month}-${year}`;
+  }
+
+  function parseNumber(value) {
+    const text = cleanCell(value).replace(/,/g, "");
+    const number = Number(text);
+    return Number.isFinite(number) ? number : 0;
+  }
+
+  function formatVolume(value) {
+    return Number(value || 0).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
 
   function buildSheetCsvUrl(input, sheetName) {
