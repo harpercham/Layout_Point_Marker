@@ -116,10 +116,10 @@ input:focus { outline: 2px solid rgba(47, 117, 181, .22); border-color: var(--bl
 .status.error { background: #fdecec; color: #a51d1d; }
 
 .metrics {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 11px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 11px;
 }
 .metrics div { border: 1px solid var(--line); border-radius: 8px; padding: 8px 4px; text-align: center; background: #fbfdff; }
-.metrics strong { display: block; color: var(--navy); font-size: 18px; }
+.metrics strong { display: block; color: var(--navy); font-size: 17px; white-space: nowrap; }
 .metrics span { display: block; color: var(--muted); font-size: 9.5px; margin-top: 2px; }
 
 .fallback { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
